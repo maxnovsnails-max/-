@@ -62,7 +62,7 @@ async function loadRecipes() {
     recipes = data.recipes;
 
     message.textContent =
-      "База загружена. Доступно рецептов: " + recipes.length;
+      "Создатель сайта: hamster14" + recipes.length;
   } catch (error) {
     console.error(error);
     message.textContent =
