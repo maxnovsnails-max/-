@@ -61,13 +61,7 @@ async function loadRecipes() {
 
     recipes = data.recipes;
 
-    message.textContent =
-      "База загружена. Доступно рецептов: " + recipes.length;
-  } catch (error) {
-    console.error(error);
-    message.textContent =
-      "Не удалось загрузить базу. Проверь, что recipes.json лежит рядом с index.html и сайт открыт через Live Server.";
-  }
+   
 }
 
 // Показываем количество и единицы измерения
