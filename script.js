@@ -3,6 +3,9 @@ const form = document.querySelector("#recipe-form");
 const input = document.querySelector("#products");
 const results = document.querySelector("#results");
 const message = document.querySelector("#message");
+if (message) {
+  message.textContent = "";
+}
 
 let recipes = [];
 
