@@ -1,0 +1,31 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Что приготовить?</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="container">
+    <h1>🍳 Что приготовить?</h1>
+    <p>Введи продукты, которые есть у тебя дома</p>
+
+    <form id="recipe-form">
+      <input
+        id="products"
+        type="text"
+        placeholder="Например: яйца, сыр, картошка"
+        required
+      >
+      <button type="submit">Найти блюда</button>
+    </form>
+
+    <p id="message"></p>
+    <section id="results"></section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

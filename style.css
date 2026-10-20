@@ -1,0 +1,75 @@
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f1f7ee;
+  color: #243528;
+}
+
+.container {
+  width: min(700px, 92%);
+  margin: 60px auto;
+  text-align: center;
+}
+
+h1 {
+  color: #287a3c;
+  font-size: 36px;
+}
+
+form {
+  display: flex;
+  gap: 10px;
+  margin: 25px 0;
+}
+
+input {
+  flex: 1;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid #cbd9c5;
+  border-radius: 10px;
+  font-size: 16px;
+}
+
+button {
+  padding: 14px 18px;
+  border: none;
+  border-radius: 10px;
+  background: #27833d;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #1d672f;
+}
+
+.recipe {
+  background: white;
+  margin: 14px 0;
+  padding: 20px;
+  border-radius: 14px;
+  text-align: left;
+  box-shadow: 0 3px 12px #0000000a;
+}
+
+.recipe h2 {
+  margin-top: 0;
+  color: #287a3c;
+}
+
+@media (max-width: 520px) {
+  form {
+    flex-direction: column;
+  }
+
+  h1 {
+    font-size: 29px;
+  }
+}
