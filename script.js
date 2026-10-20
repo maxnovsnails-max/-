@@ -3,9 +3,6 @@ const form = document.querySelector("#recipe-form");
 const input = document.querySelector("#products");
 const results = document.querySelector("#results");
 const message = document.querySelector("#message");
-if (message) {
-  message.textContent = "";
-}
 
 let recipes = [];
 
@@ -62,10 +59,17 @@ async function loadRecipes() {
       throw new Error("В файле не найден список recipes");
     }
 
-  
+    recipes = data.recipes;
 
-    message.textContent = "Создатель сайта: @hamster14";
-    }
+    message.textContent =
+      "База загружена. Доступно рецептов: " + recipes.length;
+  } catch (error) {
+    console.error(error);
+    message.textContent =
+      "Не удалось загрузить базу. Проверь, что recipes.json лежит рядом с index.html и сайт открыт через Live Server.";
+  }
+}
+
 // Показываем количество и единицы измерения
 function formatIngredient(ingredient) {
   const name = ingredient.name?.ru || ingredient.id || "Ингредиент";
@@ -243,7 +247,7 @@ function renderRecipe(item) {
   credit.style.fontSize = "12px";
   credit.style.opacity = "0.75";
   credit.textContent =
-    " ";
+    "Источник рецептов: UniTools. Лицензия базы: CC BY-SA 4.0.";
 
   card.append(credit);
 
