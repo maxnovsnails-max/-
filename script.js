@@ -59,7 +59,7 @@ async function loadRecipes() {
       throw new Error("В файле не найден список recipes");
     }
 
-    recipes = data.recipes;
+  
 
     message.textContent = "Создатель сайта: @hamster14";
   } catch (error) {
