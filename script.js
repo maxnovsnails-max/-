@@ -62,13 +62,7 @@ async function loadRecipes() {
   
 
     message.textContent = "Создатель сайта: @hamster14";
-  } catch (error) {
-    console.error(error);
-    message.textContent =
-      "Не удалось загрузить базу. Проверь, что recipes.json лежит рядом с index.html и сайт открыт через Live Server.";
-  }
-}
-
+  
 // Показываем количество и единицы измерения
 function formatIngredient(ingredient) {
   const name = ingredient.name?.ru || ingredient.id || "Ингредиент";
