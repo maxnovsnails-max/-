@@ -247,7 +247,7 @@ function renderRecipe(item) {
   credit.style.fontSize = "12px";
   credit.style.opacity = "0.75";
   credit.textContent =
-    "Источник рецептов: UniTools. Лицензия базы: CC BY-SA 4.0.";
+    " ";
 
   card.append(credit);
 
