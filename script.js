@@ -10,7 +10,7 @@ let recipes = [];
 // Скрываем сообщение о загрузке базы
 if (message) {
   message.textContent = "";
-  message.style.display = "none";
+  message.style.display = "";
 }
 // Загружаем базу рецептов
 async function loadRecipes() {
