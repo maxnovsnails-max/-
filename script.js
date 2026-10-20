@@ -7,10 +7,11 @@ const message = document.getElementById("message");
 let recipes = [];
 
 // Не показываем сообщение о загрузке базы
+// Скрываем сообщение о загрузке базы
 if (message) {
   message.textContent = "";
+  message.style.display = "none";
 }
-
 // Загружаем базу рецептов
 async function loadRecipes() {
   try {
