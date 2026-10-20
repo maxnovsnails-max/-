@@ -62,7 +62,7 @@ async function loadRecipes() {
   
 
     message.textContent = "Создатель сайта: @hamster14";
-  
+    }
 // Показываем количество и единицы измерения
 function formatIngredient(ingredient) {
   const name = ingredient.name?.ru || ingredient.id || "Ингредиент";
