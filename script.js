@@ -61,8 +61,7 @@ async function loadRecipes() {
 
     recipes = data.recipes;
 
-    message.textContent =
-      "Создатель сайта: @hamster14";
+    message.textContent = "Создатель сайта: @hamster14";
   } catch (error) {
     console.error(error);
     message.textContent =
