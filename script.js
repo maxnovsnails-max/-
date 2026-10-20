@@ -1,308 +1,194 @@
 
-const form = document.querySelector("#recipe-form");
-const input = document.querySelector("#products");
-const results = document.querySelector("#results");
-const message = document.querySelector("#message");
+const form = document.getElementById("recipe-form");
+const productsInput = document.getElementById("products");
+const results = document.getElementById("results");
+const message = document.getElementById("message");
 
 let recipes = [];
 
-// Приводим текст к единому виду для поиска
-function normalize(text) {
-  return String(text || "")
-    .toLowerCase()
-    .replaceAll("ё", "е")
-    .replace(/ё/g, "е")
-    .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+// Не показываем сообщение о загрузке базы
+if (message) {
+  message.textContent = "";
 }
 
-// Небольшой словарь синонимов
-const aliases = {
-  "курицу": "курица",
-  "куриное филе": "курица",
-  "куриная грудка": "курица",
-  "куриные грудки": "курица",
-  "картошка": "картофель",
-  "помидоры": "помидор",
-  "томаты": "помидор",
-  "яйца": "яйцо",
-  "макароны": "паста",
-  "говядина": "говядина",
-  "фарш": "фарш",
-  "лук репчатый": "лук",
-  "чеснок": "чеснок",
-  "сметана": "сметана",
-  "масло сливочное": "сливочное масло",
-  "масло растительное": "растительное масло"
-};
-
-function canonical(text) {
-  const value = normalize(text);
-  return aliases[value] || value;
-}
-
-// Загружаем локальную базу один раз
+// Загружаем базу рецептов
 async function loadRecipes() {
   try {
-    message.textContent = "Загружаем базу рецептов...";
-
     const response = await fetch("./recipes.json");
 
     if (!response.ok) {
-      throw new Error("Не удалось открыть recipes.json");
+      throw new Error("Не удалось загрузить рецепты");
     }
 
     const data = await response.json();
 
-    if (!Array.isArray(data.recipes)) {
-      throw new Error("В файле не найден список recipes");
+    // Поддерживаем базу в виде массива или объекта с массивом рецептов
+    recipes = Array.isArray(data)
+      ? data
+      : data.recipes || data.meals || [];
+
+    if (!Array.isArray(recipes) || recipes.length === 0) {
+      throw new Error("В базе нет рецептов");
     }
+  } catch (error) {
+    console.error("Ошибка загрузки рецептов:", error);
 
-    recipes = data.recipes;
-
-   
-}
-
-// Показываем количество и единицы измерения
-function formatIngredient(ingredient) {
-  const name = ingredient.name?.ru || ingredient.id || "Ингредиент";
-  const quantity = ingredient.quantity;
-  const unit = ingredient.unit || "";
-  const note = ingredient.note?.ru || "";
-
-  let text = name;
-
-  if (quantity !== null && quantity !== undefined && quantity !== "") {
-    text += " — " + quantity;
-
-    const units = {
-      g: "г",
-      kg: "кг",
-      ml: "мл",
-      l: "л",
-      piece: "шт.",
-      pieces: "шт.",
-      tbsp: "ст. л.",
-      tsp: "ч. л.",
-      pinch: "щепотка",
-      clove: "зубчик"
-    };
-
-    text += units[unit] ? " " + units[unit] : unit ? " " + unit : "";
-  }
-
-  if (note) text += " (" + note + ")";
-
-  return text;
-}
-
-// Проверяем, подходит ли ингредиент под введённый продукт
-function ingredientMatches(ingredient, product) {
-  const name = canonical(ingredient.name?.ru || ingredient.id || "");
-  const search = canonical(product);
-
-  if (!name || !search) return false;
-
-  return name === search ||
-    name.startsWith(search + " ") ||
-    search.startsWith(name + " ");
-}
-
-// Ищем рецепты по введённым продуктам
-function searchRecipes(products) {
-  return recipes
-    .map(recipe => {
-      const ingredients = recipe.ingredients || [];
-
-      const matchedProducts = products.filter(product =>
-        ingredients.some(ingredient =>
-          ingredientMatches(ingredient, product)
-        )
-      );
-
-      const missingIngredients = ingredients.filter(ingredient =>
-        !products.some(product =>
-          ingredientMatches(ingredient, product)
-        )
-      );
-
-      return {
-        recipe,
-        matchedCount: matchedProducts.length,
-        matchedProducts,
-        missingIngredients
-      };
-    })
-    .filter(item => item.matchedCount > 0)
-    .sort((a, b) =>
-      b.matchedCount - a.matchedCount ||
-      a.missingIngredients.length - b.missingIngredients.length
-    );
-}
-
-// Создаём карточку блюда
-function renderRecipe(item) {
-  const recipe = item.recipe;
-  const card = document.createElement("article");
-  card.className = "recipe";
-
-  const title = document.createElement("h2");
-  title.textContent = recipe.name?.ru || recipe.name?.en || "Блюдо";
-
-  const summary = document.createElement("p");
-  summary.textContent =
-    recipe.summary?.ru || "Описание отсутствует.";
-
-  card.append(title, summary);
-
-  if (recipe.photo?.url) {
-    const photo = document.createElement("img");
-    photo.src = recipe.photo.url;
-    photo.alt = title.textContent;
-    photo.loading = "lazy";
-    photo.style.width = "100%";
-    photo.style.maxWidth = "360px";
-    photo.style.borderRadius = "12px";
-    card.append(photo);
-  }
-
-  const match = document.createElement("p");
-  match.textContent =
-    "Совпало продуктов: " + item.matchedCount +
-    " из " + (recipe.ingredients || []).length;
-
-  card.append(match);
-
-  const ingredientsTitle = document.createElement("h3");
-  ingredientsTitle.textContent = "Ингредиенты";
-
-  const ingredientsList = document.createElement("ul");
-
-  for (const ingredient of recipe.ingredients || []) {
-    const li = document.createElement("li");
-    li.textContent = formatIngredient(ingredient);
-
-    if (item.matchedProducts.some(product =>
-      ingredientMatches(ingredient, product)
-    )) {
-      li.style.fontWeight = "bold";
+    if (message) {
+      message.textContent =
+        "Не удалось загрузить рецепты. Проверь файл recipes.json.";
     }
-
-    ingredientsList.append(li);
   }
-
-  card.append(ingredientsTitle, ingredientsList);
-
-  if (item.missingIngredients.length > 0) {
-    const missing = document.createElement("p");
-    missing.textContent =
-      "Другие продукты, которые понадобятся: " +
-      item.missingIngredients
-        .map(ingredient => ingredient.name?.ru || ingredient.id)
-        .filter(Boolean)
-        .join(", ");
-
-    card.append(missing);
-  } else {
-    const allAvailable = document.createElement("p");
-    allAvailable.textContent =
-      "Все ингредиенты есть в твоём списке!";
-    card.append(allAvailable);
-  }
-
-  const stepsTitle = document.createElement("h3");
-  stepsTitle.textContent = "Приготовление";
-  card.append(stepsTitle);
-
-  const stepsList = document.createElement("ol");
-
-  for (const step of recipe.steps || []) {
-    const li = document.createElement("li");
-    li.textContent = step.text?.ru || step.text?.en || "";
-
-    if (step.minutes) {
-      li.textContent += " (примерно " + step.minutes + " мин.)";
-    }
-
-    stepsList.append(li);
-  }
-
-  if (stepsList.children.length) {
-    card.append(stepsList);
-  } else {
-    const noSteps = document.createElement("p");
-    noSteps.textContent = "Инструкция для этого блюда отсутствует.";
-    card.append(noSteps);
-  }
-
-  // Указываем источник базы и сведения об авторе фотографии
-  const credit = document.createElement("p");
-  credit.style.fontSize = "12px";
-  credit.style.opacity = "0.75";
-  credit.textContent =
-    "Источник рецептов: UniTools. Лицензия базы: CC BY-SA 4.0.";
-
-  card.append(credit);
-
-  if (recipe.photo?.author || recipe.photo?.license) {
-    const photoCredit = document.createElement("p");
-    photoCredit.style.fontSize = "12px";
-    photoCredit.style.opacity = "0.75";
-    photoCredit.textContent =
-      "Фото: " +
-      (recipe.photo.author || "автор не указан") +
-      ". Лицензия: " +
-      (recipe.photo.license || "не указана") +
-      ".";
-
-    card.append(photoCredit);
-  }
-
-  results.append(card);
 }
 
-// Обработка формы поиска
-form.addEventListener("submit", event => {
-  event.preventDefault();
+// Получаем название рецепта
+function getRecipeName(recipe) {
+  return recipe.name ||
+    recipe.title ||
+    recipe.strMeal ||
+    recipe.recipeName ||
+    "Блюдо без названия";
+}
 
-  if (!recipes.length) {
-    message.textContent =
-      "База ещё загружается или не загрузилась. Проверь файл recipes.json.";
+// Получаем ингредиенты рецепта
+function getIngredients(recipe) {
+  if (Array.isArray(recipe.ingredients)) {
+    return recipe.ingredients.map(item => {
+      if (typeof item === "string") return item;
+      return item.name || item.ingredient || "";
+    }).filter(Boolean);
+  }
+
+  if (typeof recipe.ingredients === "string") {
+    return recipe.ingredients.split(",");
+  }
+
+  // Поддержка формата TheMealDB
+  const mealIngredients = [];
+
+  for (let i = 1; i <= 20; i++) {
+    const ingredient = recipe[`strIngredient${i}`];
+
+    if (ingredient && ingredient.trim()) {
+      mealIngredients.push(ingredient.trim());
+    }
+  }
+
+  return mealIngredients;
+}
+
+// Показываем найденные блюда
+function showRecipes(foundRecipes, userProducts) {
+  results.innerHTML = "";
+
+  if (foundRecipes.length === 0) {
+    results.textContent =
+      "Не нашли подходящих блюд. Попробуй ввести другие продукты.";
     return;
   }
 
-  const products = input.value
-    .split(",")
-    .map(canonical)
-    .filter(Boolean);
+  foundRecipes.forEach(({ recipe, matches, missing }) => {
+    const card = document.createElement("article");
+    card.className = "recipe";
 
-  results.replaceChildren();
+    const title = document.createElement("h3");
+    title.textContent = getRecipeName(recipe);
+    card.appendChild(title);
 
-  if (!products.length) {
-    message.textContent = "Введи продукты через запятую.";
-    return;
-  }
+    const ingredientsTitle = document.createElement("p");
+    ingredientsTitle.textContent = "Ингредиенты:";
+    card.appendChild(ingredientsTitle);
 
-  const found = searchRecipes(products);
+    const ingredientsList = document.createElement("p");
+    ingredientsList.textContent = getIngredients(recipe).join(", ");
+    card.appendChild(ingredientsList);
 
-  if (!found.length) {
-    message.textContent =
-      "Ничего не найдено. Попробуй другие названия продуктов.";
-    return;
-  }
+    const matchInfo = document.createElement("p");
+    matchInfo.textContent =
+      `Совпало продуктов: ${matches.length}` +
+      (missing.length
+        ? `. Ещё понадобятся: ${missing.join(", ")}`
+        : ". У тебя есть все ингредиенты!");
+    card.appendChild(matchInfo);
 
-  // Показываем до 20 подходящих рецептов
-  const shown = found.slice(0, 20);
+    if (recipe.instructions || recipe.strInstructions) {
+      const instructions = document.createElement("p");
+      instructions.textContent =
+        recipe.instructions || recipe.strInstructions;
+      card.appendChild(instructions);
+    }
 
-  for (const item of shown) {
-    renderRecipe(item);
-  }
+    results.appendChild(card);
+  });
+}
 
-  message.textContent =
-    "Найдено блюд: " + found.length +
-    ". Показано: " + shown.length + ".";
-});
+// Ищем блюда по введённым продуктам
+if (form) {
+  form.addEventListener("submit", function (event) {
+    event.preventDefault();
 
-// Загружаем базу при открытии страницы
+    const userProducts = productsInput.value
+      .toLowerCase()
+      .split(/[,;\n]+/)
+      .map(item => item.trim())
+      .filter(Boolean);
+
+    results.innerHTML = "";
+
+    if (userProducts.length === 0) {
+      if (message) {
+        message.textContent = "Сначала введи продукты.";
+      }
+      return;
+    }
+
+    if (recipes.length === 0) {
+      if (message) {
+        message.textContent =
+          "Рецепты ещё не загрузились. Обнови страницу и попробуй снова.";
+      }
+      return;
+    }
+
+    if (message) {
+      message.textContent = "";
+    }
+
+    const foundRecipes = recipes
+      .map(recipe => {
+        const ingredients = getIngredients(recipe);
+
+        const matches = ingredients.filter(ingredient => {
+          const normalized = ingredient.toLowerCase();
+
+          return userProducts.some(product =>
+            normalized.includes(product) ||
+            product.includes(normalized)
+          );
+        });
+
+        const missing = ingredients.filter(ingredient => {
+          const normalized = ingredient.toLowerCase();
+
+          return !userProducts.some(product =>
+            normalized.includes(product) ||
+            product.includes(normalized)
+          );
+        });
+
+        return { recipe, matches, missing };
+      })
+      .filter(item => item.matches.length > 0)
+      .sort((a, b) => {
+        if (b.matches.length !== a.matches.length) {
+          return b.matches.length - a.matches.length;
+        }
+        return a.missing.length - b.missing.length;
+      })
+      .slice(0, 30);
+
+    showRecipes(foundRecipes, userProducts);
+  });
+}
+
+// Запускаем загрузку базы
 loadRecipes();
